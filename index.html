@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Seat Manager</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+}
+
+h1 {
+    text-align: center;
+    margin: 10px 0 20px;
+}
+
+.legend {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 12px;
+}
+
+.legend-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+
+.green {
+    background: #22c55e;
+}
+
+.red {
+    background: #dc2626;
+}
+
+.wrapper {
+    overflow-x: auto;
+}
+
+.seating {
+    width: max-content;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.row-label {
+    width: 60px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.left-side,
+.right-side {
+    display: flex;
+    gap: 4px;
+}
+
+/* Move rows toward the aisle */
+
+.row2 .left-side {
+    margin-left: 30px;
+}
+
+.row3 .left-side {
+    margin-left: 50px;
+}
+
+.row4 .left-side {
+    margin-left: 70px;
+}
+
+.row5 .left-side {
+    margin-left: 95px;
+}
+
+.row6 .left-side {
+    margin-left: 120px;
+}
+
+.walk-path {
+    width: 60px;
+    height: 70px;
+    background: #111827;
+    color: white;
+    margin: 0 8px;
+    border-radius: 16px 16px 0 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.seat {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: #dc2626;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.seat.available {
+    background: #22c55e;
+}
+
+.front {
+    margin-top: 25px;
+    background: #111827;
+    color: white;
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.total {
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Tablets and desktops */
+
+@media (min-width: 768px) {
+
+    .seat {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+
+    .left-side,
+    .right-side {
+        gap: 8px;
+    }
+
+    .walk-path {
+        width: 100px;
+        height: 100px;
+        margin: 0 20px;
+        font-size: 18px;
+    }
+
+    .row-label {
+        width: 100px;
+        font-size: 20px;
+    }
+
+    .row2 .left-side {
+        margin-left: 70px;
+    }
+
+    .row3 .left-side {
+        margin-left: 110px;
+    }
+
+    .row4 .left-side {
+        margin-left: 150px;
+    }
+
+    .row5 .left-side {
+        margin-left: 210px;
+    }
+
+    .row6 .left-side {
+        margin-left: 260px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Seat Manager</h1>
+
+<div class="legend">
+
+    <div class="legend-item">
+        <div class="legend-box green"></div>
+        Available
+    </div>
+
+    <div class="legend-item">
+        <div class="legend-box red"></div>
+        Occupied
+    </div>
+
+</div>
+
+<div class="wrapper">
+    <div id="seating" class="seating"></div>
+</div>
+
+<div class="front">
+    FRONT
+</div>
+
+<div class="total">
+    TOTAL SEATS: 90
+</div>
+
+<script>
+
+const rows = [
+
+{
+    row: 1,
+    left: [1,2,3,4,5,6,7,8,9,10,11,12,13],
+    right: [14,15,16,17,18]
+},
+
+{
+    row: 2,
+    left: [19,20,21,22,23,24,25,26,27,28,29,30],
+    right: [31,32,33,34,35]
+},
+
+{
+    row: 3,
+    left: [36,37,38,39,40,41,42,43,44,45,46],
+    right: [47,48,49,50,51]
+},
+
+{
+    row: 4,
+    left: [52,53,54,55,56,57,58,59,60,61],
+    right: [62,63,64,65,66]
+},
+
+{
+    row: 5,
+    left: [67,68,69,70,71,72,73,74],
+    right: [75,76,77,78,79]
+},
+
+{
+    row: 6,
+    left: [80,81,82,83,84,85,86],
+    right: [87,88,89,90]
+}
+
+];
+
+const container = document.getElementById("seating");
+
+function createSeat(number) {
+
+    const seat = document.createElement("button");
+
+    seat.className = "seat";
+    seat.textContent = number;
+
+    if (localStorage.getItem("seat-" + number) === "available") {
+        seat.classList.add("available");
+    }
+
+    seat.addEventListener("click", () => {
+
+        seat.classList.toggle("available");
+
+        if (seat.classList.contains("available")) {
+            localStorage.setItem("seat-" + number, "available");
+        } else {
+            localStorage.removeItem("seat-" + number);
+        }
+
+    });
+
+    return seat;
+}
+
+rows.forEach(data => {
+
+    const row = document.createElement("div");
+    row.className = `row row${data.row}`;
+
+    const label = document.createElement("div");
+    label.className = "row-label";
+    label.innerHTML = `ROW<br>${data.row}`;
+
+    const left = document.createElement("div");
+    left.className = "left-side";
+
+    data.left.forEach(num => {
+        left.appendChild(createSeat(num));
+    });
+
+    const path = document.createElement("div");
+    path.className = "walk-path";
+    path.innerHTML = "WALK<br>PATH";
+
+    const right = document.createElement("div");
+    right.className = "right-side";
+
+    data.right.forEach(num => {
+        right.appendChild(createSeat(num));
+    });
+
+    row.appendChild(label);
+    row.appendChild(left);
+    row.appendChild(path);
+    row.appendChild(right);
+
+    container.appendChild(row);
+
+});
+
+</script>
+
+</body>
+</html>
